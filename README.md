@@ -1,3 +1,6 @@
+# DO NOT TRY THIS!
+## STILL UNDER DEVELOPMENT BTW!!!
+
 # Luanti World Backups
 
 A robust Luanti mod for performing consistent, point-in-time backups of your world's `map.sqlite` using the SQLite `VACUUM INTO` command.
