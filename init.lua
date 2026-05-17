@@ -3,18 +3,15 @@
 local ie = minetest.request_insecure_environment()
 if not ie then
 	minetest.log("error", "[world_backup] FAILED to request insecure environment! " ..
-		"Please add 'world_backup' to 'secure.trusted_mods' in minetest.conf.")
+		"Please add 'world_backups' to 'secure.trusted_mods' in minetest.conf.")
 end
 
+local modname = minetest.get_current_modname()
 world_backup = {}
 world_backup.ie = ie
-world_backup.path = minetest.get_modpath("world_backup")
+world_backup.path = minetest.get_modpath(modname)
 world_backup.world_path = minetest.get_worldpath()
-
--- Load sub-modules
-dofile(world_backup.path .. "/storage.lua")
-dofile(world_backup.path .. "/gui.lua")
-dofile(world_backup.path .. "/commands.lua")
+world_backup.storage = minetest.get_mod_storage()
 
 -- Configuration defaults
 world_backup.config = {
@@ -23,9 +20,19 @@ world_backup.config = {
 }
 
 -- Load saved config if exists
-local storage = minetest.get_mod_storage()
-world_backup.config.interval = storage:get_int("interval") or 3600
-world_backup.config.retention = storage:get_int("retention") or 10
+world_backup.config.interval = world_backup.storage:get_int("interval")
+if not world_backup.config.interval or world_backup.config.interval == 0 then
+	world_backup.config.interval = 3600
+end
+world_backup.config.retention = world_backup.storage:get_int("retention")
+if not world_backup.config.retention or world_backup.config.retention == 0 then
+	world_backup.config.retention = 10
+end
+
+-- Load sub-modules
+dofile(world_backup.path .. "/storage.lua")
+dofile(world_backup.path .. "/gui.lua")
+dofile(world_backup.path .. "/commands.lua")
 
 -- Revert Function
 function world_backup.do_revert(hash, timestamp, player_name)

@@ -1,7 +1,7 @@
 -- world_backup: gui.lua
 
-local FORMNAME_MAIN = "world_backup:main"
-local FORMNAME_CONF = "world_backup:confirm"
+local FORMNAME_MAIN = "world_backups:main"
+local FORMNAME_CONF = "world_backups:confirm"
 
 local selected_row = {}
 local selected_tab = {}
@@ -162,7 +162,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			if interval and retention then
 				world_backup.config.interval = interval * 60
 				world_backup.config.retention = retention
-				local storage = minetest.get_mod_storage()
+				local storage = world_backup.storage
 				storage:set_int("interval", world_backup.config.interval)
 				storage:set_int("retention", world_backup.config.retention)
 				minetest.chat_send_player(name, "[world_backup] Settings saved.")
