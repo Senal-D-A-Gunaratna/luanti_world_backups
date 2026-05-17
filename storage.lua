@@ -33,7 +33,8 @@ function world_backup.generate_hash_path(timestamp)
 	return sub_path
 end
 
-function world_backup.prune_backups()
+function world_backup.prune_backups(ie)
+	if not ie then return end
 	local backup_root = world_backup.world_path .. "/backups"
 	-- In a real Luanti environment, we'd need a more robust way to list directories.
 	-- Lua's os.execute or io.popen with 'find' or 'ls' is common for Linux-based servers.
@@ -43,7 +44,7 @@ function world_backup.prune_backups()
 	-- We'll use a simple find command to list all map.sqlite files in the backup root,
 	-- sort them by modification time, and remove the oldest ones.
 	local cmd = string.format("find %s -name map.sqlite -printf '%%T@ %%p\\n' | sort -n", backup_root)
-	local p = io.popen(cmd)
+	local p = ie.io.popen(cmd)
 	if not p then return end
 
 	local backups = {}
@@ -59,7 +60,7 @@ function world_backup.prune_backups()
 		local to_remove = #backups - retention
 		for i = 1, to_remove do
 			minetest.log("action", "[world_backup] Pruning old backup: " .. backups[i].path)
-			os.execute("rm -rf " .. backups[i].path)
+			ie.os.execute("rm -rf " .. backups[i].path)
 		end
 	end
 end

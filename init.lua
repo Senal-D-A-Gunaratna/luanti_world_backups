@@ -1,5 +1,11 @@
 -- world_backup: init.lua
 
+local ie = minetest.request_insecure_environment()
+if not ie then
+	minetest.log("error", "[world_backup] FAILED to request insecure environment! " ..
+		"Please add 'world_backup' to 'secure.trusted_mods' in minetest.conf.")
+end
+
 world_backup = {}
 world_backup.path = minetest.get_modpath("world_backup")
 world_backup.world_path = minetest.get_worldpath()
@@ -22,6 +28,11 @@ world_backup.config.retention = storage:get_int("retention") or 10
 
 -- Main Backup Function
 function world_backup.run_backup()
+	if not ie then
+		minetest.log("error", "[world_backup] Cannot run backup: Insecure environment not available.")
+		return false
+	end
+
 	local timestamp = os.time()
 	local date_str = os.date("%Y-%m-%d_%H-%M-%S", timestamp)
 	local hash_dir = world_backup.generate_hash_path(timestamp)
@@ -39,20 +50,20 @@ function world_backup.run_backup()
 	-- Execute VACUUM INTO using sqlite3 CLI
 	-- Note: minetest doesn't expose raw sqlite handle easily for this, so we use os.execute
 	local cmd = string.format("sqlite3 %s \"VACUUM INTO '%s';\"", source, destination)
-	local success, exit_type, code = os.execute(cmd)
+	local success, exit_type, code = ie.os.execute(cmd)
 
 	local status_msg = ""
 	if success then
 		status_msg = string.format("Backup successful at %s", date_str)
 		minetest.log("action", "[world_backup] " .. status_msg)
-		world_backup.prune_backups()
+		world_backup.prune_backups(ie)
 	else
 		status_msg = string.format("Backup failed at %s with code %s", date_str, tostring(code))
 		minetest.log("error", "[world_backup] " .. status_msg)
 	end
 
 	-- Write status log
-	local f = io.open(log_file, "w")
+	local f = ie.io.open(log_file, "w")
 	if f then
 		f:write(status_msg .. "\n")
 		f:close()
