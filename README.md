@@ -24,7 +24,7 @@ Requires the `server` privilege to access commands and settings.
 
 1. Clone or download this mod into your Luanti `mods` folder.
 2. Ensure the `sqlite3` command-line utility is installed on your server's host system.
-3. Enable `luanti_backups` in your world configuration.
+3. Enable `world_backup` in your world configuration.
 
 ## License
 MIT
