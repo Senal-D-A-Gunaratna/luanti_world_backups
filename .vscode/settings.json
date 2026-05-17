@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "bgcolor",
         "chatcommand",
         "dtime",
         "formname",
@@ -9,10 +10,12 @@
         "minetest",
         "modpath",
         "privs",
+        "tabheader",
+        "textlist",
         "worldpath"
     ],
     "Lua.diagnostics.globals": [
         "minetest",
-        "world_backups"
+        "world_backup"
     ]
 }
