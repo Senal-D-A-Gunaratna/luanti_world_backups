@@ -7,6 +7,7 @@ if not ie then
 end
 
 world_backup = {}
+world_backup.ie = ie
 world_backup.path = minetest.get_modpath("world_backup")
 world_backup.world_path = minetest.get_worldpath()
 
@@ -25,6 +26,39 @@ world_backup.config = {
 local storage = minetest.get_mod_storage()
 world_backup.config.interval = storage:get_int("interval") or 3600
 world_backup.config.retention = storage:get_int("retention") or 10
+
+-- Revert Function
+function world_backup.do_revert(hash, timestamp, player_name)
+	if not ie then return end
+	
+	local backups = world_backup.get_backups(ie)
+	local target
+	for _, b in ipairs(backups) do
+		if b.hash == hash then
+			target = b
+			break
+		end
+	end
+	
+	if not target then
+		minetest.chat_send_player(player_name, "[world_backup] Error: Backup not found.")
+		return
+	end
+	
+	minetest.log("action", "[world_backup] Reverting world to snapshot " .. hash)
+	
+	local source = target.path .. "/map.sqlite"
+	local dest = world_backup.world_path .. "/map.sqlite"
+	
+	-- Copy after a delay to allow server to flush and exit
+	local cmd = string.format("(sleep 2 && cp %q %q) &", source, dest)
+	ie.os.execute(cmd)
+	
+	minetest.chat_send_all("[world_backup] Reverting to snapshot " .. hash .. " (" .. timestamp .. ")")
+	minetest.chat_send_all("[world_backup] Server is shutting down NOW.")
+	
+	minetest.request_shutdown("Reverting to backup", true)
+end
 
 -- Main Backup Function
 function world_backup.run_backup()

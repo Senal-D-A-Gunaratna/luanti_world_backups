@@ -33,6 +33,44 @@ function world_backup.generate_hash_path(timestamp)
 	return sub_path
 end
 
+function world_backup.get_relative_time(timestamp)
+	local diff = os.time() - timestamp
+	if diff < 60 then return "just now"
+	elseif diff < 3600 then return math.floor(diff / 60) .. "m ago"
+	elseif diff < 86400 then return math.floor(diff / 3600) .. "h ago"
+	else return math.floor(diff / 86400) .. "d ago" end
+end
+
+function world_backup.get_backups(ie)
+	if not ie then return {} end
+	local backup_root = world_backup.world_path .. "/backups"
+	-- Structure: backups/YYYY/MM/DD/HH-MM-SS_hash/map.sqlite
+	local cmd = string.format("find %s -name map.sqlite -printf '%%T@|%%p\\n' | sort -rn", backup_root)
+	local p = ie.io.popen(cmd)
+	if not p then return {} end
+
+	local backups = {}
+	for line in p:lines() do
+		local time, path = line:match("([^|]+)|(.+)")
+		if time and path then
+			local timestamp = tonumber(time)
+			local b_path = path:gsub("/map.sqlite$", "")
+			local b_dir_name = b_path:match("([^/]+)$") or ""
+			local hash = b_dir_name:match("_([^_]+)$") or b_dir_name:sub(1, 8)
+			
+			table.insert(backups, {
+				time = timestamp,
+				timestamp = os.date("%Y-%m-%d %H:%M:%S", timestamp),
+				path = b_path,
+				hash = hash,
+				relative = world_backup.get_relative_time(timestamp)
+			})
+		end
+	end
+	p:close()
+	return backups
+end
+
 function world_backup.prune_backups(ie)
 	if not ie then return end
 	local backup_root = world_backup.world_path .. "/backups"
